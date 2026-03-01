@@ -1,7 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Redirect } from "expo-router";
+import { Link } from "expo-router";
+import { StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import { AppButton } from "../../src/features/shared/ui/components/AppButton";
+import { AppCard } from "../../src/features/shared/ui/components/AppCard";
+import { AppScreen } from "../../src/features/shared/ui/components/AppScreen";
+import { appTheme } from "../../src/features/shared/ui/theme";
 import { useAuthStore } from "../../src/store/authStore";
 
 export default function HomeScreen() {
@@ -10,73 +14,66 @@ export default function HomeScreen() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const signOut = useAuthStore((state) => state.signOut);
 
-  if (!hydrated) {
-    return null;
-  }
-
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
   return (
-    <View style={styles.container}>
+    <AppScreen>
+      <View style={styles.container}>
       <Text style={styles.title}>{t("home.title")}</Text>
       <Text style={styles.subtitle}>{t("home.subtitle")}</Text>
       <Text style={styles.status}>{t("auth.connected")}</Text>
-      <Pressable
-        accessibilityRole="button"
+      <AppCard style={styles.linksCard}>
+        <Link href="/(app)/marketplace" style={styles.link}>
+          {t("home.marketplaceLink")}
+        </Link>
+        <Link href="/(app)/back-office" style={styles.link}>
+          {t("home.backOfficeLink")}
+        </Link>
+        <Link href="/(app)/photo-lab" style={styles.link}>
+          {t("home.photoLabLink")}
+        </Link>
+      </AppCard>
+      <AppButton
+        label={t("auth.logoutAction")}
         onPress={() => {
           void signOut();
         }}
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-      >
-        <Text style={styles.buttonLabel}>{t("auth.logoutAction")}</Text>
-      </Pressable>
-    </View>
+        variant="secondary"
+      />
+      {!hydrated || !isAuthenticated ? (
+        <Text style={styles.statusWarning}>{t("auth.notConnected")}</Text>
+      ) : null}
+      </View>
+    </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    flex: 1,
-    gap: 12,
-    justifyContent: "center",
-    paddingHorizontal: 24,
+    gap: appTheme.spacing.md,
   },
   title: {
-    color: "#111827",
-    fontSize: 26,
-    fontWeight: "700",
-    textAlign: "center",
+    color: appTheme.colors.textPrimary,
+    fontSize: appTheme.typography.section,
+    fontWeight: "800",
   },
   subtitle: {
-    color: "#374151",
-    fontSize: 16,
-    textAlign: "center",
+    color: appTheme.colors.textSecondary,
+    fontSize: appTheme.typography.body,
   },
   status: {
-    color: "#059669",
-    fontSize: 14,
-    marginTop: 8,
+    color: appTheme.colors.primaryDark,
+    fontSize: appTheme.typography.caption,
+    fontWeight: "700",
   },
-  button: {
-    alignItems: "center",
-    backgroundColor: "#111827",
-    borderRadius: 10,
-    minHeight: 44,
-    justifyContent: "center",
-    marginTop: 8,
-    minWidth: 180,
-    paddingHorizontal: 16,
+  linksCard: {
+    gap: appTheme.spacing.sm,
   },
-  buttonPressed: {
-    opacity: 0.88,
-  },
-  buttonLabel: {
-    color: "#ffffff",
-    fontSize: 15,
+  link: {
+    color: appTheme.colors.primaryDark,
+    fontSize: appTheme.typography.body,
     fontWeight: "600",
+  },
+  statusWarning: {
+    color: appTheme.colors.warning,
+    fontSize: appTheme.typography.caption,
   },
 });

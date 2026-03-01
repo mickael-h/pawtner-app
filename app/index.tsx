@@ -25,5 +25,5 @@ export default function IndexScreen() {
     return <Redirect href="/(app)" />;
   }
 
-  return <Redirect href="/(auth)/login" />;
+  return <Redirect href="/(public)" />;
 }

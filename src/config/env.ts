@@ -21,4 +21,5 @@ export const env = {
     "com.pawtner.oauth://oauthredirect",
   allowInsecureHttp:
     (readEnv("EXPO_PUBLIC_ALLOW_INSECURE_HTTP") ?? "false") === "true",
+  geminiApiKey: readEnv("EXPO_PUBLIC_GEMINI_API_KEY") ?? "",
 } as const;

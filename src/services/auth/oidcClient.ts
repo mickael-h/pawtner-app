@@ -31,6 +31,25 @@ export async function loginWithOidc(): Promise<AuthSession> {
   };
 }
 
+export async function signUpWithOidc(): Promise<AuthSession> {
+  const result = await authorize({
+    ...authConfig,
+    additionalParameters: {
+      ...authConfig.additionalParameters,
+      // `prompt=create` works reliably on recent Keycloak versions.
+      // `kc_action=register` preserves compatibility with existing realm behavior.
+      prompt: "create",
+      kc_action: "register",
+    } as unknown as AuthConfiguration["additionalParameters"],
+  });
+
+  return {
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken ?? null,
+    idToken: result.idToken ?? null,
+  };
+}
+
 export async function refreshWithOidc(
   refreshToken: string,
 ): Promise<AuthSession> {

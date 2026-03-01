@@ -10,6 +10,7 @@ import {
   endKeycloakSession,
   loginWithOidc,
   refreshWithOidc,
+  signUpWithOidc,
 } from "../services/auth/oidcClient";
 
 type AuthState = {
@@ -21,6 +22,7 @@ type AuthState = {
   isAuthenticated: boolean;
   hydrate: () => Promise<void>;
   signIn: () => Promise<void>;
+  signUp: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
 };
@@ -58,6 +60,31 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         errorMessage:
           error instanceof Error ? error.message : "Authentication failed.",
+      });
+      throw error;
+    } finally {
+      set({
+        isLoading: false,
+      });
+    }
+  },
+  signUp: async () => {
+    set({
+      isLoading: true,
+      errorMessage: null,
+    });
+    try {
+      const session = await signUpWithOidc();
+      await saveSession(session);
+      set({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        isAuthenticated: true,
+      });
+    } catch (error) {
+      set({
+        errorMessage:
+          error instanceof Error ? error.message : "Registration failed.",
       });
       throw error;
     } finally {
