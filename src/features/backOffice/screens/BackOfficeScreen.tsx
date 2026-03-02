@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
+import {
+  buildAnimalTypeDistribution,
+  buildMonthlySalesPoints,
+} from "../domain/chartData";
+import { BackOfficeCharts } from "../ui/BackOfficeCharts";
 import { getFemaleAnimals } from "../../shared/domain/selectors";
 import { AnimalType } from "../../shared/domain/models";
 import { mockAnimals } from "../../shared/data/mockData";
@@ -27,6 +32,11 @@ export function BackOfficeScreen() {
   const femaleAnimals = useMemo(() => getFemaleAnimals(mockAnimals), []);
   const maleAnimals = useMemo(
     () => mockAnimals.filter((animal) => animal.gender === "M"),
+    [],
+  );
+  const monthlySalesPoints = useMemo(() => buildMonthlySalesPoints(), []);
+  const animalDistribution = useMemo(
+    () => buildAnimalTypeDistribution(mockAnimals),
     [],
   );
 
@@ -97,9 +107,10 @@ export function BackOfficeScreen() {
               value={t("backOffice.scoreValue")}
               detail={t("backOffice.scoreDetail")}
             />
-            <AppCard>
-              <Text style={styles.noteText}>{t("backOffice.deferredCharts")}</Text>
-            </AppCard>
+            <BackOfficeCharts
+              distributionPoints={animalDistribution}
+              salesPoints={monthlySalesPoints}
+            />
           </View>
         ) : null}
 
@@ -155,9 +166,10 @@ export function BackOfficeScreen() {
                     <Pressable
                       key={type}
                       onPress={() => setAuditType(type)}
-                      style={[
+                      style={({ pressed }) => [
                         styles.typeButton,
                         auditType === type && styles.typeButtonActive,
+                        pressed && styles.interactivePressed,
                       ]}
                     >
                       <Text
@@ -214,7 +226,11 @@ function TabButton({ label, active, onPress }: TabButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.tabButton, active && styles.tabButtonActive]}
+      style={({ pressed }) => [
+        styles.tabButton,
+        active && styles.tabButtonActive,
+        pressed && styles.interactivePressed,
+      ]}
     >
       <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
         {label}
@@ -347,5 +363,9 @@ const styles = StyleSheet.create({
   },
   typeButtonLabelActive: {
     color: "#ffffff",
+  },
+  interactivePressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.985 }],
   },
 });

@@ -33,7 +33,12 @@ export function PublicHomeScreen() {
           <Text style={styles.heroSubtitle}>{t("publicHome.heroSubtitle")}</Text>
           <View style={styles.heroActions}>
             <Link asChild href="/(auth)/login">
-              <Pressable style={styles.primaryActionButton}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.primaryActionButton,
+                  pressed && styles.actionButtonPressed,
+                ]}
+              >
                 <Text
                   adjustsFontSizeToFit
                   minimumFontScale={0.85}
@@ -45,7 +50,12 @@ export function PublicHomeScreen() {
               </Pressable>
             </Link>
             <Link asChild href="/(public)/ethical-charter">
-              <Pressable style={styles.secondaryActionButton}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.secondaryActionButton,
+                  pressed && styles.actionButtonPressed,
+                ]}
+              >
                 <Text
                   adjustsFontSizeToFit
                   minimumFontScale={0.85}
@@ -172,6 +182,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     textAlign: "center",
+  },
+  actionButtonPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.985 }],
   },
   familyImageFallback: {
     alignItems: "center",

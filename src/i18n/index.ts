@@ -104,6 +104,9 @@ const resources = {
         scoreLabel: "Ethical score",
         scoreValue: "95 / 100",
         scoreDetail: "Trusted breeder",
+        chartsSectionTitle: "Performance trends",
+        salesTrendTitle: "Sales trend (6 months)",
+        populationByTypeTitle: "Animals by type",
         deferredCharts:
           "Detailed charts are deferred to the next phase for robust native integration.",
         cycleUnknown: "Cycle not provided",
@@ -246,6 +249,9 @@ const resources = {
         scoreLabel: "Score label éthique",
         scoreValue: "95 / 100",
         scoreDetail: "Éleveur de confiance",
+        chartsSectionTitle: "Tendances de performance",
+        salesTrendTitle: "Tendance des ventes (6 mois)",
+        populationByTypeTitle: "Animaux par type",
         deferredCharts:
           "Les graphiques détaillés sont différés à la prochaine phase pour une intégration native robuste.",
         cycleUnknown: "Cycle non renseigné",

@@ -18,6 +18,8 @@ export const heroImageUrl =
 export const familyImageUrl =
   "https://images.unsplash.com/photo-1591768793355-74d7ca736056?auto=format&fit=crop&q=80&w=1200";
 
+export const mockMonthlySales = [8600, 9200, 10100, 9700, 11200, 12400];
+
 export const mockBreeders: Breeder[] = [
   {
     id: "b1",

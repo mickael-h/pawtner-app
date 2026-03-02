@@ -164,7 +164,10 @@ export function MarketplaceScreen() {
                     onPress={() => {
                       void openBreederDetails(breeder.id);
                     }}
-                    style={styles.breederButton}
+                    style={({ pressed }) => [
+                      styles.breederButton,
+                      pressed && styles.interactivePressed,
+                    ]}
                   >
                     <Text style={styles.breederName}>{breeder.name}</Text>
                     <Text style={styles.breederMeta}>
@@ -238,9 +241,10 @@ function FilterGroup<TLabel extends string>({
         <Pressable
           key={option.value}
           onPress={() => onSelect(option.value)}
-          style={[
+          style={({ pressed }) => [
             styles.filterButton,
             selected === option.value && styles.filterButtonActive,
+            pressed && styles.interactivePressed,
           ]}
         >
           <Text
@@ -351,6 +355,10 @@ const styles = StyleSheet.create({
   breederMeta: {
     color: appTheme.colors.textSecondary,
     fontSize: appTheme.typography.caption,
+  },
+  interactivePressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.985 }],
   },
   modalContent: {
     gap: appTheme.spacing.sm,
