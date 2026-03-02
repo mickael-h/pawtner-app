@@ -2,12 +2,12 @@ import { Stack } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Redirect } from "expo-router";
 
-import { useAuthStore } from "../../src/store/authStore";
+import { selectIsAuthenticated, useAuthStore } from "../../src/store/authStore";
 import { appTheme } from "../../src/features/shared/ui/theme";
 
 export default function PrivateLayout() {
   const hydrated = useAuthStore((state) => state.hydrated);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
 
   if (!hydrated) {
     return (

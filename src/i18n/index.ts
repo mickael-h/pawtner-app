@@ -25,6 +25,12 @@ const resources = {
         signupAction: "Create account",
         noAccount: "New to Pawtner?",
         logoutAction: "Sign out",
+        errors: {
+          cancelled: "Authentication was cancelled.",
+          network: "Network error. Please check your connection and retry.",
+          oidcUnavailable: "Authentication service is temporarily unavailable.",
+          unknown: "Authentication failed. Please try again.",
+        },
       },
       publicHome: {
         heroTag: "Leading ethical platform",
@@ -157,6 +163,12 @@ const resources = {
         signupAction: "Créer mon compte",
         noAccount: "Vous découvrez Pawtner ?",
         logoutAction: "Se déconnecter",
+        errors: {
+          cancelled: "L'authentification a été annulée.",
+          network: "Erreur réseau. Vérifiez votre connexion et réessayez.",
+          oidcUnavailable: "Le service d'authentification est momentanément indisponible.",
+          unknown: "Échec de l'authentification. Veuillez réessayer.",
+        },
       },
       publicHome: {
         heroTag: "Plateforme éthique de référence",

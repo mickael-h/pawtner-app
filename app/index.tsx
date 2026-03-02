@@ -1,11 +1,11 @@
 import { ActivityIndicator, View } from "react-native";
 import { Redirect } from "expo-router";
 
-import { useAuthStore } from "../src/store/authStore";
+import { selectIsAuthenticated, useAuthStore } from "../src/store/authStore";
 
 export default function IndexScreen() {
   const hydrated = useAuthStore((state) => state.hydrated);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
 
   if (!hydrated) {
     return (

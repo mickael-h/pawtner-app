@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useTranslation } from "react-i18next";
 
-import { useAuthStore } from "../../../store/authStore";
+import { selectIsAuthenticated, useAuthStore } from "../../../store/authStore";
 import { AppButton } from "../../shared/ui/components/AppButton";
 import { appTheme } from "../../shared/ui/theme";
 import { AuthScaffold } from "../components/AuthScaffold";
@@ -10,11 +10,12 @@ import { AuthScaffold } from "../components/AuthScaffold";
 export function SignInScreen() {
   const { t } = useTranslation();
   const hydrated = useAuthStore((state) => state.hydrated);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
-  const errorMessage = useAuthStore((state) => state.errorMessage);
+  const errorCode = useAuthStore((state) => state.errorCode);
   const signIn = useAuthStore((state) => state.signIn);
   const signUp = useAuthStore((state) => state.signUp);
+  const errorMessage = errorCode ? t(`auth.errors.${errorCode}`) : null;
 
   if (!hydrated) {
     return (

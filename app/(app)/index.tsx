@@ -6,12 +6,12 @@ import { AppButton } from "../../src/features/shared/ui/components/AppButton";
 import { AppCard } from "../../src/features/shared/ui/components/AppCard";
 import { AppScreen } from "../../src/features/shared/ui/components/AppScreen";
 import { appTheme } from "../../src/features/shared/ui/theme";
-import { useAuthStore } from "../../src/store/authStore";
+import { selectIsAuthenticated, useAuthStore } from "../../src/store/authStore";
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const hydrated = useAuthStore((state) => state.hydrated);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const signOut = useAuthStore((state) => state.signOut);
 
   return (

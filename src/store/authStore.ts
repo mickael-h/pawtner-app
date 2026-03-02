@@ -18,8 +18,7 @@ type AuthState = {
   refreshToken: string | null;
   hydrated: boolean;
   isLoading: boolean;
-  errorMessage: string | null;
-  isAuthenticated: boolean;
+  errorCode: AuthErrorCode | null;
   hydrate: () => Promise<void>;
   signIn: () => Promise<void>;
   signUp: () => Promise<void>;
@@ -27,26 +26,51 @@ type AuthState = {
   refreshSession: () => Promise<boolean>;
 };
 
+export type AuthErrorCode = "cancelled" | "network" | "oidcUnavailable" | "unknown";
+
+function normalizeAuthError(error: unknown): AuthErrorCode {
+  if (!(error instanceof Error)) {
+    return "unknown";
+  }
+
+  const message = error.message.toLowerCase();
+
+  if (/(cancel|canceled|cancelled|dismiss)/.test(message)) {
+    return "cancelled";
+  }
+
+  if (/(network|timeout|timed out|internet|econn|enotfound)/.test(message)) {
+    return "network";
+  }
+
+  if (/(oidc|issuer|authorization|authorize|token|keycloak)/.test(message)) {
+    return "oidcUnavailable";
+  }
+
+  return "unknown";
+}
+
+export const selectIsAuthenticated = (state: Pick<AuthState, "accessToken">) =>
+  Boolean(state.accessToken);
+
 export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   refreshToken: null,
   hydrated: false,
   isLoading: false,
-  errorMessage: null,
-  isAuthenticated: false,
+  errorCode: null,
   hydrate: async () => {
     const session = await getSession();
     set({
       accessToken: session?.accessToken ?? null,
       refreshToken: session?.refreshToken ?? null,
       hydrated: true,
-      isAuthenticated: Boolean(session?.accessToken),
     });
   },
   signIn: async () => {
     set({
       isLoading: true,
-      errorMessage: null,
+      errorCode: null,
     });
     try {
       const session = await loginWithOidc();
@@ -54,12 +78,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
-        isAuthenticated: true,
       });
     } catch (error) {
       set({
-        errorMessage:
-          error instanceof Error ? error.message : "Authentication failed.",
+        errorCode: normalizeAuthError(error),
       });
       throw error;
     } finally {
@@ -71,7 +93,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async () => {
     set({
       isLoading: true,
-      errorMessage: null,
+      errorCode: null,
     });
     try {
       const session = await signUpWithOidc();
@@ -79,12 +101,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
-        isAuthenticated: true,
       });
     } catch (error) {
       set({
-        errorMessage:
-          error instanceof Error ? error.message : "Registration failed.",
+        errorCode: normalizeAuthError(error),
       });
       throw error;
     } finally {
@@ -99,8 +119,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       accessToken: null,
       refreshToken: null,
-      isAuthenticated: false,
-      errorMessage: null,
+      errorCode: null,
     });
     // End Keycloak session in same browser context as sign-in so next sign-in shows login form.
     if (session?.idToken) {
@@ -119,7 +138,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
-        isAuthenticated: true,
       });
       return true;
     } catch {
@@ -127,7 +145,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         accessToken: null,
         refreshToken: null,
-        isAuthenticated: false,
       });
       return false;
     }
@@ -147,7 +164,7 @@ export function useAuthBootstrap() {
 
 export function useRequireAuthReady() {
   const hydrated = useAuthStore((state) => state.hydrated);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
 
   return {
     hydrated,

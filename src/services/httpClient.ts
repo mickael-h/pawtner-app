@@ -15,18 +15,32 @@ export async function apiFetch<TResponse>(
   path: string,
   init?: RequestInit,
 ): Promise<TResponse> {
-  const token = useAuthStore.getState().accessToken;
-  const baseHeaders = new Headers(init?.headers);
-  baseHeaders.set("Content-Type", "application/json");
+  const buildHeaders = (token: string | null) => {
+    const baseHeaders = new Headers(init?.headers);
+    baseHeaders.set("Content-Type", "application/json");
 
-  if (token) {
-    baseHeaders.set("Authorization", `Bearer ${token}`);
+    if (token) {
+      baseHeaders.set("Authorization", `Bearer ${token}`);
+    }
+
+    return baseHeaders;
+  };
+
+  const runRequest = async (token: string | null) => {
+    return fetch(`${env.apiBaseUrl}${path}`, {
+      ...init,
+      headers: buildHeaders(token),
+    });
+  };
+
+  let response = await runRequest(useAuthStore.getState().accessToken);
+
+  if (response.status === 401) {
+    const refreshed = await useAuthStore.getState().refreshSession();
+    if (refreshed) {
+      response = await runRequest(useAuthStore.getState().accessToken);
+    }
   }
-
-  const response = await fetch(`${env.apiBaseUrl}${path}`, {
-    ...init,
-    headers: baseHeaders,
-  });
 
   if (!response.ok) {
     const body = await response.text();
