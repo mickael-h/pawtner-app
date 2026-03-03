@@ -3,6 +3,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
 
+import { formatErrorFeedback } from "../../../services/errorFeedback";
 import { editAnimalPhoto } from "../../shared/services/geminiService";
 import { AppButton } from "../../shared/ui/components/AppButton";
 import { AppCard } from "../../shared/ui/components/AppCard";
@@ -68,8 +69,8 @@ export function PhotoLabScreen() {
     try {
       const result = await editAnimalPhoto(sourceImageBase64, prompt);
       setEditedImageUri(result);
-    } catch {
-      setErrorMessage(t("photoLab.processingFailed"));
+    } catch (error) {
+      setErrorMessage(formatErrorFeedback(t("photoLab.processingFailed"), error));
     } finally {
       setIsProcessing(false);
     }

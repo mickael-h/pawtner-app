@@ -1,5 +1,4 @@
 import { Animal, AnimalType } from "../../shared/domain/models";
-import { mockMonthlySales } from "../../shared/data/mockData";
 
 export type ChartPoint = {
   label: string;
@@ -8,8 +7,12 @@ export type ChartPoint = {
 };
 
 export function buildMonthlySalesPoints(
-  monthlySales: number[] = mockMonthlySales,
+  monthlySales: number[],
 ): ChartPoint[] {
+  if (monthlySales.length === 0) {
+    return [];
+  }
+
   const maxValue = Math.max(...monthlySales, 1);
 
   return monthlySales.map((value, index) => ({

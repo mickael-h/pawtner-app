@@ -22,33 +22,41 @@ export function BackOfficeCharts({
 
       <AppCard style={styles.chartCard}>
         <Text style={styles.chartTitle}>{t("backOffice.salesTrendTitle")}</Text>
-        <View style={styles.barsRow}>
-          {salesPoints.map((point) => (
-            <View key={point.label} style={styles.barColumn}>
-              <View style={styles.barTrack}>
-                <View style={[styles.barFill, { height: `${Math.max(point.ratio * 100, 8)}%` }]} />
+        {salesPoints.length === 0 ? (
+          <Text style={styles.noDataText}>{t("backOffice.noData")}</Text>
+        ) : (
+          <View style={styles.barsRow}>
+            {salesPoints.map((point) => (
+              <View key={point.label} style={styles.barColumn}>
+                <View style={styles.barTrack}>
+                  <View style={[styles.barFill, { height: `${Math.max(point.ratio * 100, 8)}%` }]} />
+                </View>
+                <Text style={styles.barLabel}>{point.label}</Text>
               </View>
-              <Text style={styles.barLabel}>{point.label}</Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </AppCard>
 
       <AppCard style={styles.chartCard}>
         <Text style={styles.chartTitle}>{t("backOffice.populationByTypeTitle")}</Text>
-        <View style={styles.horizontalBars}>
-          {distributionPoints.map((point) => (
-            <View key={point.label} style={styles.horizontalRow}>
-              <Text style={styles.horizontalLabel}>{point.label}</Text>
-              <View style={styles.horizontalTrack}>
-                <View
-                  style={[styles.horizontalFill, { width: `${Math.max(point.ratio * 100, 6)}%` }]}
-                />
+        {distributionPoints.length === 0 ? (
+          <Text style={styles.noDataText}>{t("backOffice.noData")}</Text>
+        ) : (
+          <View style={styles.horizontalBars}>
+            {distributionPoints.map((point) => (
+              <View key={point.label} style={styles.horizontalRow}>
+                <Text style={styles.horizontalLabel}>{point.label}</Text>
+                <View style={styles.horizontalTrack}>
+                  <View
+                    style={[styles.horizontalFill, { width: `${Math.max(point.ratio * 100, 6)}%` }]}
+                  />
+                </View>
+                <Text style={styles.horizontalValue}>{point.value}</Text>
               </View>
-              <Text style={styles.horizontalValue}>{point.value}</Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </AppCard>
     </View>
   );
@@ -70,6 +78,10 @@ const styles = StyleSheet.create({
     color: appTheme.colors.textSecondary,
     fontSize: appTheme.typography.caption,
     fontWeight: "700",
+  },
+  noDataText: {
+    color: appTheme.colors.textSecondary,
+    fontSize: appTheme.typography.body,
   },
   barsRow: {
     alignItems: "flex-end",

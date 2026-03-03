@@ -3,6 +3,7 @@ import { Redirect } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { selectIsAuthenticated, useAuthStore } from "../../../store/authStore";
+import { formatErrorFeedback } from "../../../services/errorFeedback";
 import { AppButton } from "../../shared/ui/components/AppButton";
 import { appTheme } from "../../shared/ui/theme";
 import { AuthScaffold } from "../components/AuthScaffold";
@@ -13,9 +14,12 @@ export function SignInScreen() {
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
   const errorCode = useAuthStore((state) => state.errorCode);
+  const errorDetail = useAuthStore((state) => state.errorDetail);
   const signIn = useAuthStore((state) => state.signIn);
   const signUp = useAuthStore((state) => state.signUp);
-  const errorMessage = errorCode ? t(`auth.errors.${errorCode}`) : null;
+  const errorMessage = errorCode
+    ? formatErrorFeedback(t(`auth.errors.${errorCode}`), errorDetail)
+    : null;
 
   if (!hydrated) {
     return (

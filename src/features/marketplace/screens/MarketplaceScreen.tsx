@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -9,18 +9,23 @@ import {
   Breeder,
   ListingFilter,
   ListingType,
-  SearchFilter,
+  SearchFilter
 } from "../../shared/domain/models";
 import {
   filterAnimals,
-  getAverageRating,
-  getBreederById,
+  getAverageRating
 } from "../../shared/domain/selectors";
-import { mockAnimals, mockBreeders } from "../../shared/data/mockData";
 import {
   getBreederTrustSummary,
   getEthicalInsight,
 } from "../../shared/services/geminiService";
+import { formatErrorFeedback } from "../../../services/errorFeedback";
+import {
+  fetchMarketplaceAnimals,
+  fetchMerchantBreeder,
+  toApiAnimalType,
+  toApiListingType,
+} from "../../shared/services/marketplaceApi";
 import { AppButton } from "../../shared/ui/components/AppButton";
 import { AppCard } from "../../shared/ui/components/AppCard";
 import { AppModalSheet } from "../../shared/ui/components/AppModalSheet";
@@ -39,6 +44,9 @@ export function MarketplaceScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<SearchFilter>("All");
   const [selectedListing, setSelectedListing] = useState<ListingFilter>("All");
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [dataErrorMessage, setDataErrorMessage] = useState<string | null>(null);
 
   const [insightState, setInsightState] = useState<InsightState>(null);
   const [isInsightLoading, setIsInsightLoading] = useState(false);
@@ -47,14 +55,35 @@ export function MarketplaceScreen() {
   const [trustSummary, setTrustSummary] = useState("");
   const [isTrustLoading, setIsTrustLoading] = useState(false);
 
-  const animals = useMemo(() => {
+  const filteredAnimals = useMemo(() => {
     return filterAnimals({
-      animals: mockAnimals,
+      animals,
       searchQuery,
       selectedType,
       selectedListing,
     });
-  }, [searchQuery, selectedListing, selectedType]);
+  }, [animals, searchQuery, selectedListing, selectedType]);
+
+  useEffect(() => {
+    async function loadMarketplaceOffers() {
+      setIsDataLoading(true);
+      setDataErrorMessage(null);
+      try {
+        const result = await fetchMarketplaceAnimals({
+          animalType: toApiAnimalType(selectedType),
+          listingType: toApiListingType(selectedListing),
+          status: "published",
+        });
+        setAnimals(result);
+      } catch (error) {
+        setDataErrorMessage(formatErrorFeedback(t("marketplace.loadFailed"), error));
+      } finally {
+        setIsDataLoading(false);
+      }
+    }
+
+    void loadMarketplaceOffers();
+  }, [selectedListing, selectedType, t]);
 
   async function openInsight(animal: Animal) {
     setIsInsightLoading(true);
@@ -69,10 +98,10 @@ export function MarketplaceScreen() {
         breed: animal.breed,
         text: insight,
       });
-    } catch {
+    } catch (error) {
       setInsightState({
         breed: animal.breed,
-        text: t("marketplace.insightUnavailable"),
+        text: formatErrorFeedback(t("marketplace.insightUnavailable"), error),
       });
     } finally {
       setIsInsightLoading(false);
@@ -80,20 +109,17 @@ export function MarketplaceScreen() {
   }
 
   async function openBreederDetails(breederId: string) {
-    const breeder = getBreederById(mockBreeders, breederId);
-    if (!breeder) {
-      return;
-    }
-
-    setSelectedBreeder(breeder);
+    setSelectedBreeder(null);
     setTrustSummary("");
     setIsTrustLoading(true);
 
     try {
+      const breeder = await fetchMerchantBreeder(breederId);
+      setSelectedBreeder(breeder);
       const summary = await getBreederTrustSummary(breeder.name, breeder.reviews);
       setTrustSummary(summary);
-    } catch {
-      setTrustSummary(t("marketplace.trustUnavailable"));
+    } catch (error) {
+      setTrustSummary(formatErrorFeedback(t("marketplace.trustUnavailable"), error));
     } finally {
       setIsTrustLoading(false);
     }
@@ -133,14 +159,29 @@ export function MarketplaceScreen() {
           selected={selectedListing}
         />
 
-        {animals.length === 0 ? (
+        {isDataLoading ? (
+          <AppCard>
+            <Text style={styles.emptyText}>{t("marketplace.loadingOffers")}</Text>
+          </AppCard>
+        ) : null}
+
+        {dataErrorMessage ? (
+          <AppCard>
+            <Text style={styles.emptyTitle}>{t("marketplace.emptyTitle")}</Text>
+            <Text style={styles.emptyText}>{dataErrorMessage}</Text>
+          </AppCard>
+        ) : null}
+
+        {!isDataLoading && !dataErrorMessage && filteredAnimals.length === 0 ? (
           <AppCard>
             <Text style={styles.emptyTitle}>{t("marketplace.emptyTitle")}</Text>
             <Text style={styles.emptyText}>{t("marketplace.emptyText")}</Text>
           </AppCard>
         ) : (
-          animals.map((animal) => {
-            const breeder = getBreederById(mockBreeders, animal.breederId);
+          filteredAnimals.map((animal) => {
+            const breederTitle = t("marketplace.breederFallbackName", {
+              code: animal.breederId.slice(0, 8),
+            });
             return (
               <AppCard key={animal.id} style={styles.animalCard}>
                 <Image source={{ uri: animal.imageUrl }} style={styles.animalImage} />
@@ -159,25 +200,18 @@ export function MarketplaceScreen() {
 
                 <Text style={styles.description}>{animal.description}</Text>
 
-                {breeder ? (
-                  <Pressable
-                    onPress={() => {
-                      void openBreederDetails(breeder.id);
-                    }}
-                    style={({ pressed }) => [
-                      styles.breederButton,
-                      pressed && styles.interactivePressed,
-                    ]}
-                  >
-                    <Text style={styles.breederName}>{breeder.name}</Text>
-                    <Text style={styles.breederMeta}>
-                      {t("marketplace.breederRating", {
-                        rating: getAverageRating(breeder.reviews),
-                        count: breeder.reviews.length,
-                      })}
-                    </Text>
-                  </Pressable>
-                ) : null}
+                <Pressable
+                  onPress={() => {
+                    void openBreederDetails(animal.breederId);
+                  }}
+                  style={({ pressed }) => [
+                    styles.breederButton,
+                    pressed && styles.interactivePressed,
+                  ]}
+                >
+                  <Text style={styles.breederName}>{breederTitle}</Text>
+                  <Text style={styles.breederMeta}>{t("marketplace.breederHint")}</Text>
+                </Pressable>
 
                 <AppButton
                   label={t("marketplace.insightButton")}
@@ -215,6 +249,14 @@ export function MarketplaceScreen() {
           <Text style={styles.modalText}>
             {isTrustLoading ? t("marketplace.trustLoading") : trustSummary}
           </Text>
+          {selectedBreeder ? (
+            <Text style={styles.modalText}>
+              {t("marketplace.breederRating", {
+                rating: getAverageRating(selectedBreeder.reviews),
+                count: selectedBreeder.reviews.length,
+              })}
+            </Text>
+          ) : null}
         </View>
       </AppModalSheet>
     </AppScreen>

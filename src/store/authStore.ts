@@ -12,6 +12,7 @@ import {
   refreshWithOidc,
   signUpWithOidc,
 } from "../services/auth/oidcClient";
+import { extractErrorDetail } from "../services/errorFeedback";
 
 type AuthState = {
   accessToken: string | null;
@@ -19,6 +20,7 @@ type AuthState = {
   hydrated: boolean;
   isLoading: boolean;
   errorCode: AuthErrorCode | null;
+  errorDetail: string | null;
   hydrate: () => Promise<void>;
   signIn: () => Promise<void>;
   signUp: () => Promise<void>;
@@ -59,6 +61,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   hydrated: false,
   isLoading: false,
   errorCode: null,
+  errorDetail: null,
   hydrate: async () => {
     const session = await getSession();
     set({
@@ -71,6 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       isLoading: true,
       errorCode: null,
+      errorDetail: null,
     });
     try {
       const session = await loginWithOidc();
@@ -82,6 +86,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       set({
         errorCode: normalizeAuthError(error),
+        errorDetail: extractErrorDetail(error),
       });
       throw error;
     } finally {
@@ -94,6 +99,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       isLoading: true,
       errorCode: null,
+      errorDetail: null,
     });
     try {
       const session = await signUpWithOidc();
@@ -105,6 +111,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       set({
         errorCode: normalizeAuthError(error),
+        errorDetail: extractErrorDetail(error),
       });
       throw error;
     } finally {
@@ -120,6 +127,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       accessToken: null,
       refreshToken: null,
       errorCode: null,
+      errorDetail: null,
     });
     // End Keycloak session in same browser context as sign-in so next sign-in shows login form.
     if (session?.idToken) {

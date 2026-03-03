@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -8,9 +8,13 @@ import {
 } from "../domain/chartData";
 import { BackOfficeCharts } from "../ui/BackOfficeCharts";
 import { getFemaleAnimals } from "../../shared/domain/selectors";
-import { AnimalType } from "../../shared/domain/models";
-import { mockAnimals } from "../../shared/data/mockData";
+import { Animal, AnimalType } from "../../shared/domain/models";
 import { auditPriceEthics } from "../../shared/services/geminiService";
+import {
+  fetchMerchantAnimals,
+  fetchMonthlySalesAmounts,
+} from "../../shared/services/marketplaceApi";
+import { formatErrorFeedback } from "../../../services/errorFeedback";
 import { AppButton } from "../../shared/ui/components/AppButton";
 import { AppCard } from "../../shared/ui/components/AppCard";
 import { AppScreen } from "../../shared/ui/components/AppScreen";
@@ -28,17 +32,45 @@ export function BackOfficeScreen() {
   const [auditPrice, setAuditPrice] = useState("");
   const [auditResult, setAuditResult] = useState("");
   const [isAuditLoading, setIsAuditLoading] = useState(false);
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [monthlySales, setMonthlySales] = useState<number[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
 
-  const femaleAnimals = useMemo(() => getFemaleAnimals(mockAnimals), []);
+  const femaleAnimals = useMemo(() => getFemaleAnimals(animals), [animals]);
   const maleAnimals = useMemo(
-    () => mockAnimals.filter((animal) => animal.gender === "M"),
-    [],
+    () => animals.filter((animal) => animal.gender === "M"),
+    [animals],
   );
-  const monthlySalesPoints = useMemo(() => buildMonthlySalesPoints(), []);
+  const monthlySalesPoints = useMemo(
+    () => buildMonthlySalesPoints(monthlySales),
+    [monthlySales],
+  );
   const animalDistribution = useMemo(
-    () => buildAnimalTypeDistribution(mockAnimals),
-    [],
+    () => buildAnimalTypeDistribution(animals),
+    [animals],
   );
+
+  useEffect(() => {
+    async function loadBackOfficeData() {
+      setIsDataLoading(true);
+      setDataError(null);
+      try {
+        const [merchantAnimals, monthlySalesAmounts] = await Promise.all([
+          fetchMerchantAnimals(),
+          fetchMonthlySalesAmounts(),
+        ]);
+        setAnimals(merchantAnimals);
+        setMonthlySales(monthlySalesAmounts);
+      } catch (error) {
+        setDataError(formatErrorFeedback(t("backOffice.loadFailed"), error));
+      } finally {
+        setIsDataLoading(false);
+      }
+    }
+
+    void loadBackOfficeData();
+  }, [t]);
 
   async function runAudit() {
     const parsedPrice = Number(auditPrice);
@@ -55,8 +87,10 @@ export function BackOfficeScreen() {
         parsedPrice,
       );
       setAuditResult(response);
-    } catch {
-      setAuditResult(t("backOffice.auditUnavailable"));
+    } catch (error) {
+      setAuditResult(
+        formatErrorFeedback(t("backOffice.auditUnavailable"), error),
+      );
     } finally {
       setIsAuditLoading(false);
     }
@@ -92,6 +126,18 @@ export function BackOfficeScreen() {
 
         {activeTab === "dashboard" ? (
           <View style={styles.section}>
+            {isDataLoading ? (
+              <AppCard>
+                <Text style={styles.noteText}>
+                  {t("backOffice.loadingData")}
+                </Text>
+              </AppCard>
+            ) : null}
+            {dataError ? (
+              <AppCard>
+                <Text style={styles.noteText}>{dataError}</Text>
+              </AppCard>
+            ) : null}
             <KpiCard
               label={t("backOffice.salesLabel")}
               value={t("backOffice.salesValue")}
@@ -125,7 +171,9 @@ export function BackOfficeScreen() {
                 <View style={styles.animalDetails}>
                   <Text style={styles.animalName}>{animal.name}</Text>
                   <Text style={styles.animalSub}>{animal.breed}</Text>
-                  <AppTag label={animal.cycleStatus ?? t("backOffice.cycleUnknown")} />
+                  <AppTag
+                    label={animal.cycleStatus ?? t("backOffice.cycleUnknown")}
+                  />
                 </View>
               </AppCard>
             ))}
@@ -159,7 +207,9 @@ export function BackOfficeScreen() {
         {activeTab === "audit" ? (
           <View style={styles.section}>
             <AppCard style={styles.auditCard}>
-              <Text style={styles.auditTitle}>{t("backOffice.auditTitle")}</Text>
+              <Text style={styles.auditTitle}>
+                {t("backOffice.auditTitle")}
+              </Text>
               <View style={styles.typeSelector}>
                 {[AnimalType.DOG, AnimalType.CAT, AnimalType.HORSE].map(
                   (type) => (

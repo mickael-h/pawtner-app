@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { mockAnimals } from "../../shared/data/mockData";
+import { mockAnimals } from "../../../test/fixtures/mockDomainData";
 import {
   buildAnimalTypeDistribution,
   buildMonthlySalesPoints,

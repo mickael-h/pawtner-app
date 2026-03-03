@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { AnimalType, ListingType } from "./models";
-import { mockAnimals, mockBreeders } from "../data/mockData";
+import { mockAnimals, mockBreeders } from "../../../test/fixtures/mockDomainData";
 import { filterAnimals, getAverageRating, getBreederById, getFemaleAnimals } from "./selectors";
 
 test("filterAnimals applies type filter", () => {
